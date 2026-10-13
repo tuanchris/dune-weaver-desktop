@@ -55,10 +55,10 @@ DW_SMOKE=http://<table-ip> npm run electron
 - **Installers** (`electron-builder.js`): macOS DMG (arm64) and Windows NSIS (x64), both built
   from macOS. `extraMetadata.main` points the packaged app at `electron/main.js`, because `main`
   belongs to Expo.
-- **Icons:** Windows uses the mobile app's `assets/icon.png` as is. macOS doesn't mask icons the
-  way iOS does, so it uses `build/icon-mac.png`, the same art on Apple's rounded-square grid.
-  Re-run `python3 scripts/mac-icon.py` when the mobile icon changes. Dev runs set it as the Dock
-  icon too.
+- **Icons** come from the mobile app's own icon (`expo.icon` in its `app.json`, the sand photo).
+  Windows uses it as is. macOS doesn't mask icons the way iOS does, so it uses
+  `build/icon-mac.png`, the same image on Apple's rounded-square grid. Re-run
+  `python3 scripts/mac-icon.py` when the mobile icon changes. Dev runs set it as the Dock icon too.
 - **Version = the bundled mobile version.** `app.config.js` (what Settings and diagnostics show)
   and `electron-builder.js` (the installers) both read `../dune-weaver-mobile/app.json`. That way
   mobile's bundled "What's new" badges the right entry, and the update check compares like with
