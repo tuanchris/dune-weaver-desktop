@@ -15,7 +15,7 @@ nvm use                 # Node 24 (.nvmrc)
 npm install
 npm start               # expo export -p web → dist/, then open it in Electron
 npm run electron        # reopen the last export without rebuilding
-npm run dist            # export, then build installers into release/ (add --mac or --win for one)
+npm run dist -- --mac --win   # export, then build both installers into release/ (no flags: this OS only)
 ```
 
 Smoke test against a real table. It reads `/sand_status` through `fetch` and through an XHR that
@@ -100,9 +100,10 @@ repo must be public, because the app reads `releases/latest` without auth. Setti
 "Update" button opens the release page.
 
 ```sh
-npm run dist
+APPLE_API_KEY=~/.appstoreconnect/private_keys/AuthKey_<id>.p8 APPLE_API_KEY_ID=<id> \
+  APPLE_API_ISSUER=<issuer> npm run dist -- --mac --win
 gh release create v1.2.0 --repo tuanchris/dune-weaver-desktop --notes "…" \
-  "release/Dune Weaver-1.2.0-arm64.dmg" "release/Dune Weaver Setup 1.2.0.exe"
+  release/Dune-Weaver-1.2.0-mac-arm64.dmg release/Dune-Weaver-1.2.0-win-x64.exe
 ```
 
 ## Known gaps

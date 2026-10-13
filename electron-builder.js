@@ -8,6 +8,8 @@ module.exports = {
   extraMetadata: { main: 'electron/main.js', version: require('../dune-weaver-mobile/app.json').expo.version },
   files: ['electron/**', 'dist/**'],
   directories: { output: 'release' },
+  // No spaces: GitHub turns them into dots in release asset names.
+  artifactName: 'Dune-Weaver-${version}-${os}-${arch}.${ext}',
   icon: '../dune-weaver-mobile/assets/icon.png',
   mac: {
     target: [{ target: 'dmg', arch: ['arm64'] }],
