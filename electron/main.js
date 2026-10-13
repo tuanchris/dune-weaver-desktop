@@ -48,6 +48,9 @@ app.on('second-instance', () => {
 
 if (!process.env.DW_SMOKE && !app.requestSingleInstanceLock()) app.quit()
 else app.whenReady().then(() => {
+  // Dev runs the stock Electron.app; give its Dock tile the real icon.
+  if (!app.isPackaged) app.dock?.setIcon(path.join(__dirname, '..', 'build', 'icon-mac.png'))
+
   // The default menu, except View → Reload (which restarts the app) becomes
   // Refresh: it re-reads the lists on screen, standing in for pull-to-refresh
   // (shims/refresh-control.tsx).

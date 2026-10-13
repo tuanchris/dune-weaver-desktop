@@ -13,6 +13,8 @@ module.exports = {
   icon: '../dune-weaver-mobile/assets/icon.png',
   mac: {
     target: [{ target: 'dmg', arch: ['arm64'] }],
+    // macOS doesn't mask icons; this one has the shape baked in (scripts/mac-icon.py).
+    icon: 'build/icon-mac.png',
     category: 'public.app-category.lifestyle',
     extendInfo: { NSLocalNetworkUsageDescription: 'Dune Weaver finds and controls your sand table on the local network.' },
   },

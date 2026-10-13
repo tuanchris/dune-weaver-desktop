@@ -54,7 +54,11 @@ DW_SMOKE=http://<table-ip> npm run electron
   what `electron/` requires at runtime (`bonjour-service`). The drift check reads both blocks.
 - **Installers** (`electron-builder.js`): macOS DMG (arm64) and Windows NSIS (x64), both built
   from macOS. `extraMetadata.main` points the packaged app at `electron/main.js`, because `main`
-  belongs to Expo. The icon is the mobile app's `assets/icon.png`.
+  belongs to Expo.
+- **Icons:** Windows uses the mobile app's `assets/icon.png` as is. macOS doesn't mask icons the
+  way iOS does, so it uses `build/icon-mac.png`, the same art on Apple's rounded-square grid.
+  Re-run `python3 scripts/mac-icon.py` when the mobile icon changes. Dev runs set it as the Dock
+  icon too.
 - **Version = the bundled mobile version.** `app.config.js` (what Settings and diagnostics show)
   and `electron-builder.js` (the installers) both read `../dune-weaver-mobile/app.json`. That way
   mobile's bundled "What's new" badges the right entry, and the update check compares like with
@@ -99,6 +103,25 @@ repo must be public, because the app reads `releases/latest` without auth. Setti
 (mobile `fetchLatestApp`, `web` branch) compares that tag with the running version, and its
 "Update" button opens the release page.
 
+**CI does it** (`.github/workflows/build.yml`). After mobile's version bump lands on its `main`,
+push the matching tag:
+
+```sh
+git tag v1.3.0 && git push origin v1.3.0
+```
+
+The workflow refuses a tag that doesn't match mobile's version. It builds a signed, notarized DMG
+and the Windows installer, then publishes the release. It needs these repo secrets:
+
+| Secret | Value |
+|---|---|
+| `MAC_CERT_P12_BASE64` | The "Developer ID Application: Dune Weaver Inc." cert and key, exported from Keychain Access as `.p12`, then base64-encoded |
+| `MAC_CERT_PASSWORD` | That `.p12`'s password |
+| `APPLE_API_KEY_P8` | The contents of the App Store Connect key `AuthKey_<id>.p8` |
+| `APPLE_API_KEY_ID`, `APPLE_API_ISSUER` | That key's ID and issuer ID |
+
+**By hand**, from a Mac with the cert in its keychain:
+
 ```sh
 APPLE_API_KEY=~/.appstoreconnect/private_keys/AuthKey_<id>.p8 APPLE_API_KEY_ID=<id> \
   APPLE_API_ISSUER=<issuer> npm run dist -- --mac --win
@@ -108,7 +131,6 @@ gh release create v1.2.0 --repo tuanchris/dune-weaver-desktop --notes "…" \
 
 ## Known gaps
 
-- The release repo doesn't exist yet. Until it does, the update check shows "unknown".
 - Desktop-only fixes can't get a new version (it mirrors mobile), so the update check won't
   announce them. They reach users with the next mobile version.
 - Signing: electron-builder signs the Mac app automatically if a "Developer ID Application" cert
@@ -122,4 +144,5 @@ gh release create v1.2.0 --repo tuanchris/dune-weaver-desktop --notes "…" \
 ## Checks
 
 `npx tsc --noEmit` type-checks the shims and the mobile source they pull in. `npm run web` confirms
-the bundle builds.
+the bundle builds. CI runs both on every push and PR, against mobile's `main`. Run the workflow by
+hand after mobile changes, since a mobile commit doesn't trigger desktop CI.
