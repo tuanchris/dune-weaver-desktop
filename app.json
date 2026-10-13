@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Dune Weaver",
+    "slug": "dune-weaver-desktop",
+    "userInterfaceStyle": "automatic",
+    "platforms": [
+      "web"
+    ],
+    "web": {
+      "output": "single"
+    },
+    "experiments": {
+      "onDemandFilesystem": false
+    }
+  }
+}
