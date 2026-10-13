@@ -1,4 +1,5 @@
-# Pushes and PRs: type-check and bundle against dune-weaver-mobile's main.
+# Pushes and PRs: type-check and bundle against dune-weaver-mobile's main
+# (plus dune-weaver's patterns, which mobile's bundled library is generated from).
 # Tag v<mobile version> (e.g. v1.3.0): build a signed, notarized Mac DMG and a
 # Windows installer, then publish them as the GitHub Release the app's update
 # check reads.
@@ -20,11 +21,16 @@ jobs:
         with: { path: dune-weaver-desktop }
       - uses: actions/checkout@v7
         with: { repository: tuanchris/dune-weaver-mobile, path: dune-weaver-mobile }
+      # Mobile's bundled patterns are generated (gitignored) from dune-weaver's.
+      - uses: actions/checkout@v7
+        with: { repository: tuanchris/dune-weaver, path: dune-weaver, sparse-checkout: patterns }
       - uses: actions/setup-node@v7
         with:
           node-version-file: dune-weaver-desktop/.nvmrc
           cache: npm
           cache-dependency-path: '*/package-lock.json'
+      - run: npm run gen-geometry
+        working-directory: dune-weaver-mobile
       # tsc resolves the mobile source's imports from mobile's own node_modules.
       - run: npm ci
         working-directory: dune-weaver-mobile
@@ -44,11 +50,16 @@ jobs:
         with: { path: dune-weaver-desktop }
       - uses: actions/checkout@v7
         with: { repository: tuanchris/dune-weaver-mobile, path: dune-weaver-mobile }
+      # Mobile's bundled patterns are generated (gitignored) from dune-weaver's.
+      - uses: actions/checkout@v7
+        with: { repository: tuanchris/dune-weaver, path: dune-weaver, sparse-checkout: patterns }
       - uses: actions/setup-node@v7
         with:
           node-version-file: dune-weaver-desktop/.nvmrc
           cache: npm
           cache-dependency-path: dune-weaver-desktop/package-lock.json
+      - run: npm run gen-geometry
+        working-directory: dune-weaver-mobile
       - name: Tag must match the bundled mobile version
         run: |
           v=$(node -p "require('../dune-weaver-mobile/app.json').expo.version")

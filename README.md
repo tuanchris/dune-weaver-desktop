@@ -144,5 +144,6 @@ gh release create v1.2.0 --repo tuanchris/dune-weaver-desktop --notes "…" \
 ## Checks
 
 `npx tsc --noEmit` type-checks the shims and the mobile source they pull in. `npm run web` confirms
-the bundle builds. CI runs both on every push and PR, against mobile's `main`. Run the workflow by
+the bundle builds. CI runs both on every push and PR, against mobile's `main`. Mobile's pattern
+library is generated (`npm run gen-geometry`) from `tuanchris/dune-weaver`'s `patterns/`. Run the workflow by
 hand after mobile changes, since a mobile commit doesn't trigger desktop CI.
