@@ -20,11 +20,17 @@ npm run dist -- --mac --win   # export, then build both installers into release/
 
 Smoke test against a real table. It reads `/sand_status` through `fetch` and through an XHR that
 carries `X-Sand-Key`, browses mDNS for 5 s, prints `SMOKE {...}`, and exits non-zero on failure
-(including when no table answers mDNS). It also works on a packaged app: run
-`DW_SMOKE=… "release/mac-arm64/Dune Weaver.app/Contents/MacOS/Dune Weaver"`.
+(including when no table answers mDNS).
 
 ```sh
 DW_SMOKE=http://<table-ip> npm run electron
+```
+
+Run from a terminal, the app inherits the terminal's Local Network permission. To test a packaged
+app's own permission, launch it the way Finder does:
+
+```sh
+open -n -W --env DW_SMOKE=http://<table-ip> --stdout /tmp/smoke.txt "release/mac-arm64/Dune Weaver.app" && cat /tmp/smoke.txt
 ```
 
 ## How it works
@@ -45,6 +51,14 @@ DW_SMOKE=http://<table-ip> npm run electron
   sent to the system browser. The scheme is `corsEnabled` because the app loads `app://cache`
   images into a canvas from `app://bundle` (imported-pattern previews), which counts as
   cross-origin.
+- **Own executable UUID (macOS).** Local Network privacy tells programs apart by the main
+  executable's Mach-O UUID (TN3179). Electron's stock binary has the same UUID in every app on
+  that Electron version, dev `Electron.app` included. Sharing it, macOS never showed the "find
+  devices on local networks" alert, blocked the app, and never listed it in Settings, so no
+  request reached the table. electron-builder's `afterPack` hook writes a UUID derived
+  from `appId` (`dwarfdump --uuid` shows it), then signs the executable ad hoc, because Apple
+  Silicon won't run a binary whose signature is broken. Developer ID signing replaces that
+  signature.
 - **One instance.** A second launch focuses the open window. Two instances would share storage
   and double-poll the table. `DW_SMOKE` runs are exempt.
 - **Menu:** the Electron default, except View → Reload, which would restart the app, is replaced
@@ -111,7 +125,9 @@ git tag v1.3.0 && git push origin v1.3.0
 ```
 
 The workflow refuses a tag that doesn't match mobile's version. It builds a signed, notarized DMG
-and the Windows installer, then publishes the release. It needs these repo secrets:
+and the Windows installer, then publishes the release. To reissue the current version with a
+desktop-only fix, move its tag to the fix (`git tag -f v1.3.0 && git push -f origin v1.3.0`). The
+workflow then replaces that release's installers and keeps its notes. It needs these repo secrets:
 
 | Secret | Value |
 |---|---|
@@ -131,8 +147,9 @@ gh release create v1.2.0 --repo tuanchris/dune-weaver-desktop --notes "…" \
 
 ## Known gaps
 
-- Desktop-only fixes can't get a new version (it mirrors mobile), so the update check won't
-  announce them. They reach users with the next mobile version.
+- Desktop-only fixes can't get a new version (it mirrors mobile). A reissue (above) reaches new
+  downloads, but the update check won't announce it to existing installs. Those get it with the
+  next mobile version.
 - Signing: electron-builder signs the Mac app automatically if a "Developer ID Application" cert
   is in the keychain. It notarizes only when `APPLE_API_KEY`/`APPLE_API_KEY_ID`/`APPLE_API_ISSUER`
   (or `APPLE_ID`/`APPLE_APP_SPECIFIC_PASSWORD`/`APPLE_TEAM_ID`) are set. Windows needs
