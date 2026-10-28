@@ -67,7 +67,7 @@ class FsFile {
     return p ? dw.read(p) : new Uint8Array(await (await fetch(this.uri)).arrayBuffer())
   }
 
-  write(data: string | Uint8Array, options?: { encoding?: 'utf8' | 'base64' }): void {
+  writeSync(data: string | Uint8Array, options?: { encoding?: 'utf8' | 'base64' }): void {
     dw.write(pathOf(this.uri), data, options?.encoding)
   }
 
