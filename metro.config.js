@@ -9,6 +9,9 @@ const MOBILE = path.resolve(__dirname, '../dune-weaver-mobile')
 const ENTRY = path.join(__dirname, 'index.ts')
 const SHIMS = {
   'expo-file-system': path.join(__dirname, 'shims/expo-file-system.ts'),
+  'expo-secure-store': path.join(__dirname, 'shims/expo-secure-store.ts'),
+  'expo-web-browser': path.join(__dirname, 'shims/expo-web-browser.ts'),
+  'expo-crypto': path.join(__dirname, 'shims/expo-crypto.ts'),
   'react-native-zeroconf': path.join(__dirname, 'shims/zeroconf.ts'),
 }
 // react-native-web's own files, swapped wherever they're imported from (its
@@ -35,7 +38,8 @@ config.resolver.blockList = [
   ...[].concat(config.resolver.blockList ?? []),
   new RegExp(`^${esc(MOBILE)}[\\\\/](node_modules|ios|android|dist|\\.expo|fastlane)[\\\\/]`),
 ]
-config.resolver.assetExts.push('thr')
+// Pattern files the mobile app bundles as assets (.thr, and G-code for rectangular tables).
+config.resolver.assetExts.push('thr', 'gcode', 'gc', 'nc')
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (SHIMS[moduleName]) return { type: 'sourceFile', filePath: SHIMS[moduleName] }
   const fromMobile = context.originModulePath.startsWith(MOBILE + path.sep)
