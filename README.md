@@ -90,6 +90,9 @@ open -n -W --env DW_SMOKE=http://<table-ip> --stdout /tmp/smoke.txt "release/mac
 | `react-native-zeroconf` (mDNS) | `shims/zeroconf.ts` → `bonjour-service` in the preload, re-querying every 2 s because Wi-Fi drops multicast. Scan and DHCP auto-relocate work. |
 | `Share.share` (react-native-web needs `navigator.share`, which Electron lacks) | `shims/share.ts` → native save dialog. The diagnostics report is saved as a `.txt` file. |
 | `RefreshControl` (react-native-web drops `onRefresh`: no pull gesture) | `shims/refresh-control.tsx`, swapped for react-native-web's own file in `metro.config.js` → runs `onRefresh` on View → Refresh, only for lists on the focused screen. |
+| `expo-secure-store` (no web backend) | `shims/expo-secure-store.ts` → Electron `safeStorage` (Keychain / DPAPI) in `userData/secure.json`, via IPC. Holds the Pattern Hub's refresh token. |
+| `expo-web-browser` sign-in window + the `duneweaver://oauth` redirect | `shims/expo-web-browser.ts` opens the sign-in page in the system browser and reports `cancel` (the mobile code keeps the pending sign-in). `electron/main.js` registers `duneweaver://` (`protocols` in `electron-builder.js` for the Mac app) and passes each link to the page, where `shims/linking.ts` fires react-native-web's `Linking` 'url' event: the mobile app's `useHubAuthLinks` finishes the sign-in, as it does an email link. Dev registers the stock Electron binary as the handler. |
+| `expo-crypto` (PKCE) | `shims/expo-crypto.ts` → Web Crypto. |
 | `ErrorUtils` global handler (web errors never reach it) and `Platform.Version` (`'0.0.0'` on web) | `shims/diagnostics.ts` → uncaught errors reach the app's crash log, and the diagnostics report names the OS (e.g. `macOS 27.0.1`). |
 
 ## Releasing

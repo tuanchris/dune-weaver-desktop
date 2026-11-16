@@ -17,6 +17,14 @@ export interface DesktopBridge {
   save(opts: { name: string; text: string }): Promise<boolean>
   /** Run `fn` on the View → Refresh menu command. */
   onRefresh(fn: () => void): void
+  /** The duneweaver:// link this launch opened with, once (else null). */
+  initialUrl(): Promise<string | null>
+  /** Run `fn` with each duneweaver:// link opened while the app runs. */
+  onOpenUrl(fn: (url: string) => void): void
+  /** Electron safeStorage, kept in userData/secure.json. */
+  secureGet(key: string): Promise<string | null>
+  secureSet(key: string, value: string): Promise<void>
+  secureDelete(key: string): Promise<void>
   /** Browse mDNS until the returned stop() is called. */
   mdnsBrowse(type: string, protocol: string, onUp: (service: unknown) => void, onDown: (name: string) => void): () => void
 }

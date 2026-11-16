@@ -1,6 +1,7 @@
 // Node-side half of the desktop shims: file access for shims/expo-file-system,
 // native dialogs for shims/alert and shims/share, mDNS for shims/zeroconf,
-// the Refresh menu command for shims/refresh-control.
+// the Refresh menu command for shims/refresh-control, duneweaver:// links for
+// shims/linking, encrypted storage for shims/expo-secure-store.
 // Paths come from app:// urls via resolveAppUrl, or from a picked file via
 // webUtils.
 const { contextBridge, ipcRenderer, webUtils } = require('electron')
@@ -34,6 +35,13 @@ contextBridge.exposeInMainWorld('dw', {
   onRefresh: (fn) => {
     ipcRenderer.on('dw:refresh', () => fn())
   },
+  initialUrl: () => ipcRenderer.invoke('dw:initial-url'),
+  onOpenUrl: (fn) => {
+    ipcRenderer.on('dw:open-url', (_, url) => fn(url))
+  },
+  secureGet: (key) => ipcRenderer.invoke('dw:secure-get', key),
+  secureSet: (key, value) => ipcRenderer.invoke('dw:secure-set', key, value),
+  secureDelete: (key) => ipcRenderer.invoke('dw:secure-delete', key),
   // Services go out in react-native-zeroconf's 'resolved' shape. A socket error
   // (no network) just means nothing is found, so log it instead of throwing.
   // bonjour-service queries once; Wi-Fi drops multicast, so re-ask every 2 s

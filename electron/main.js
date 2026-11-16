@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, shell } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, safeStorage, shell } = require('electron')
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
@@ -38,9 +38,75 @@ ipcMain.handle('dw:save', async (e, { name, text }) => {
   return true
 })
 
+// The Pattern Hub's sign-in comes back as a duneweaver://oauth link (from the
+// browser, or an email link): the OS hands it to this app, which passes it to
+// the page as a Linking 'url' event (shims/linking.ts), where the mobile app's
+// useHubAuthLinks finishes the sign-in. macOS sends 'open-url' (also on a cold
+// start, before 'ready'); Windows puts the link in argv, of this launch or of a
+// second one. A link that arrives before the page asks for it waits here.
+const SCHEME = 'duneweaver'
+const linkIn = (argv) => argv.find((a) => a.startsWith(`${SCHEME}://`))
+let pendingLink = linkIn(process.argv) ?? null
+function openLink(url) {
+  const [win] = BrowserWindow.getAllWindows()
+  if (!win) return void (pendingLink = url)
+  if (win.isMinimized()) win.restore()
+  win.focus()
+  win.webContents.send('dw:open-url', url)
+}
+app.on('open-url', (e, url) => {
+  e.preventDefault()
+  if (app.isReady()) openLink(url)
+  else pendingLink = url
+})
+ipcMain.handle('dw:initial-url', () => {
+  const url = pendingLink
+  pendingLink = null
+  return url
+})
+// Dev runs the stock Electron binary, which needs this script as its argument.
+if (app.isPackaged) app.setAsDefaultProtocolClient(SCHEME)
+else app.setAsDefaultProtocolClient(SCHEME, process.execPath, [path.resolve(process.argv[1])])
+
+// expo-secure-store for the Pattern Hub's refresh token (shims/expo-secure-store.ts):
+// Electron's safeStorage (the Keychain on macOS, DPAPI on Windows) encrypts each
+// value into userData/secure.json. Without it nothing is kept: signed out.
+const secureFile = () => path.join(app.getPath('userData'), 'secure.json')
+async function secureRead() {
+  try {
+    return JSON.parse(await fs.readFile(secureFile(), 'utf8'))
+  } catch {
+    return {}
+  }
+}
+ipcMain.handle('dw:secure-get', async (e, key) => {
+  const v = (await secureRead())[key]
+  if (!v || !safeStorage.isEncryptionAvailable()) return null
+  try {
+    return safeStorage.decryptString(Buffer.from(v, 'base64'))
+  } catch {
+    return null
+  }
+})
+ipcMain.handle('dw:secure-set', async (e, key, value) => {
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('No secure storage on this computer')
+  const all = await secureRead()
+  all[key] = safeStorage.encryptString(value).toString('base64')
+  await fs.writeFile(secureFile(), JSON.stringify(all))
+})
+ipcMain.handle('dw:secure-delete', async (e, key) => {
+  const all = await secureRead()
+  if (!(key in all)) return
+  delete all[key]
+  await fs.writeFile(secureFile(), JSON.stringify(all))
+})
+
 // One instance: a second would share the same storage and double-poll the
-// table. DW_SMOKE runs are exempt so they work beside an open app.
-app.on('second-instance', () => {
+// table. DW_SMOKE runs are exempt so they work beside an open app. A second
+// launch with a link (Windows) passes it on.
+app.on('second-instance', (e, argv) => {
+  const url = linkIn(argv)
+  if (url) return openLink(url)
   const [win] = BrowserWindow.getAllWindows()
   if (win?.isMinimized()) win.restore()
   win?.focus()

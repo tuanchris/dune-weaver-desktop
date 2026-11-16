@@ -39,7 +39,7 @@ config.resolver.blockList = [
   new RegExp(`^${esc(MOBILE)}[\\\\/](node_modules|ios|android|dist|\\.expo|fastlane)[\\\\/]`),
 ]
 // Pattern files the mobile app bundles as assets (.thr, and G-code for rectangular tables).
-config.resolver.assetExts.push('thr', 'gcode', 'gc', 'nc')
+config.resolver.assetExts.push('thr', 'gcode', 'gc', 'nc', 'bin') // bin: the sand engine's baked clears (assets/sand)
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (SHIMS[moduleName]) return { type: 'sourceFile', filePath: SHIMS[moduleName] }
   const fromMobile = context.originModulePath.startsWith(MOBILE + path.sep)

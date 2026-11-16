@@ -1,12 +1,19 @@
-// Desktop stand-in for expo-secure-store, which has no web backend. Nothing is
-// kept, so the desktop app always reads as signed out of duneweaver.com (the
-// Pattern Hub is hidden there). Only the members src/lib/hubAuth.ts uses.
-export const AFTER_FIRST_UNLOCK = 0
+// Desktop stand-in for expo-secure-store (no web backend): Electron's
+// safeStorage through the preload bridge (electron/main.js). Only the members
+// src/lib/hubAuth.ts uses.
+import { dw } from './bridge'
 
-export async function getItemAsync(_key: string, _options?: unknown): Promise<string | null> {
-  return null
+export const AFTER_FIRST_UNLOCK = 0
+export type SecureStoreOptions = { keychainAccessible?: number }
+
+export function getItemAsync(key: string, _options?: SecureStoreOptions): Promise<string | null> {
+  return dw.secureGet(key)
 }
 
-export async function setItemAsync(_key: string, _value: string, _options?: unknown): Promise<void> {}
+export function setItemAsync(key: string, value: string, _options?: SecureStoreOptions): Promise<void> {
+  return dw.secureSet(key, value)
+}
 
-export async function deleteItemAsync(_key: string, _options?: unknown): Promise<void> {}
+export function deleteItemAsync(key: string, _options?: SecureStoreOptions): Promise<void> {
+  return dw.secureDelete(key)
+}

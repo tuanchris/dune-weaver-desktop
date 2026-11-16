@@ -1,4 +1,5 @@
 import './shims/diagnostics'
 import './shims/alert'
 import './shims/share'
+import './shims/linking'
 import '../dune-weaver-mobile/index'

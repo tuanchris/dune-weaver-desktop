@@ -1,7 +1,10 @@
-// Desktop stand-in for expo-web-browser: there's no redirect handling on
-// desktop, so a sign-in window always reads as cancelled (the Pattern Hub is
-// hidden there). Only the members src/lib/hubAuth.ts uses.
-export async function openAuthSessionAsync(_url: string, _redirectUrl?: string | null): Promise<{ type: 'cancel' }> {
+// Desktop stand-in for expo-web-browser. The sign-in page opens in the system
+// browser (main.js sends window.open there), and its redirect comes back as a
+// duneweaver://oauth link the OS hands to the app (shims/linking.ts), which the
+// mobile app's useHubAuthLinks finishes. So this reports 'cancel' at once: in
+// hubAuth.signIn a cancel keeps the pending sign-in for that link.
+export async function openAuthSessionAsync(url: string, _redirectUrl?: string | null): Promise<{ type: 'cancel' }> {
+  window.open(url, '_blank')
   return { type: 'cancel' }
 }
 

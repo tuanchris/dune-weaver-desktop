@@ -50,5 +50,8 @@ module.exports = {
     category: 'public.app-category.lifestyle',
     extendInfo: { NSLocalNetworkUsageDescription: 'Dune Weaver finds and controls your sand table on the local network.' },
   },
+  // duneweaver:// links (the Pattern Hub sign-in's redirect) open this app: the
+  // mac Info.plist; on Windows the app registers itself at launch (main.js).
+  protocols: [{ name: 'Dune Weaver', schemes: ['duneweaver'] }],
   win: { target: [{ target: 'nsis', arch: ['x64'] }] },
 }
